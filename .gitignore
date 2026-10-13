@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.coverage
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+# Local secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+!.env.example
+!.env.*.example
+# Local data
+backend/data/
+backend/uploads/
+backend/.venv/
+frontend/.env.local
+*.pdf
+*.sqlite3
+.DS_Store
+Thumbs.db
