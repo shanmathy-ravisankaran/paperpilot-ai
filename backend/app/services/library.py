@@ -70,6 +70,20 @@ class LocalLibrary:
     def paper(self, paper_id: str) -> dict[str, Any] | None:
         return self._catalog().get(paper_id)
 
+    def set_display_title(self, paper_id: str, display_title: str | None) -> dict[str, Any] | None:
+        """Store a local UI label without changing source metadata or chunk citations."""
+        catalog = self._catalog()
+        paper = catalog.get(paper_id)
+        if paper is None:
+            return None
+        if display_title:
+            paper["display_title"] = display_title
+        else:
+            paper.pop("display_title", None)
+        catalog[paper_id] = paper
+        self._save_catalog(catalog)
+        return paper
+
     def passages_for_paper(self, paper_id: str) -> list[dict[str, Any]]:
         """Read locally indexed passages without embedding a query."""
         result = self._store().get(where={"paper_id": paper_id}, include=["documents", "metadatas"])

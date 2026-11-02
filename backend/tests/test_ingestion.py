@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.services.chunking import chunk_pages
 from app.services.library import LocalLibrary
-from app.services.pdf import PdfValidationError, extract_pdf, validate_pdf
+from app.services.pdf import PdfValidationError, _first_page_title, extract_pdf, validate_pdf
 
 
 def test_pdf_validation_rejects_wrong_type_and_size() -> None:
@@ -40,6 +40,11 @@ def test_extraction_is_page_aware_with_mocked_pymupdf(monkeypatch: pytest.Monkey
     extracted = extract_pdf(b"%PDF-1.7", "source.pdf")
     assert extracted.title == "Study"
     assert extracted.page_text == ["First page", "Second page"]
+
+
+def test_first_page_title_uses_source_text_not_a_generated_label() -> None:
+    title = _first_page_title("Abstract\nA Study of Evidence-Grounded Research Workflows\nAda Researcher")
+    assert title == "A Study of Evidence-Grounded Research Workflows"
 
 
 def test_chunking_is_deterministic_and_preserves_page_and_section() -> None:
@@ -93,3 +98,20 @@ def test_hybrid_ranking_is_deterministic_and_keeps_vector_candidates(tmp_path) -
     assert first == second
     assert {item["chunk_id"] for item in first} == {"one", "two", "three"}
     assert first == sorted(first, key=lambda item: (-item["score"], item["page"], item["chunk_id"]))
+
+
+def test_display_title_override_preserves_original_catalog_title(tmp_path) -> None:
+    library = LocalLibrary(str(tmp_path), "test-model")
+    library._save_catalog({"paper": {"id": "paper", "title": "EJ1172284", "filename": "source.pdf"}})
+    updated = library.set_display_title("paper", "Verified source title")
+    assert updated is not None
+    assert updated["title"] == "EJ1172284"
+    assert updated["display_title"] == "Verified source title"
+    assert library.set_display_title("paper", None) is not None
+    assert "display_title" not in library.paper("paper")
+
+
+def test_display_title_endpoint_rejects_too_long_values() -> None:
+    response = TestClient(app).patch("/papers/paper/display-title", json={"display_title": "x" * 241})
+    assert response.status_code == 422
+    assert "240" in response.json()["detail"]

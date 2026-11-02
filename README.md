@@ -44,7 +44,7 @@ py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
 Copy-Item .env.example .env
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8001
 ```
 
 ```powershell
@@ -55,7 +55,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. Upload a text-based PDF from **Paper Library**. API documentation is at `http://127.0.0.1:8000/docs`.
+Open `http://localhost:3000`. Upload a text-based PDF from **Paper Library**. API documentation is at `http://127.0.0.1:8001/docs`.
 
 To use free local inference, explicitly install and download the model yourself:
 

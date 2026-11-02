@@ -13,7 +13,9 @@ from app.services.pdf import PdfValidationError, extract_pdf, validate_pdf
 router = APIRouter(prefix="/papers", tags=["papers"])
 
 class Paper(BaseModel):
-    id: str; title: str; author: str | None = None; filename: str; page_count: int; chunk_count: int; indexed_at: str
+    id: str; title: str; display_title: str | None = None; author: str | None = None; filename: str; page_count: int; chunk_count: int; indexed_at: str
+class DisplayTitleUpdate(BaseModel):
+    display_title: str | None = None
 class Passage(BaseModel):
     text: str; score: float; paper_id: str; title: str; page: int; section: str; chunk_id: str
 class SearchResponse(BaseModel):
@@ -45,6 +47,16 @@ def list_papers() -> list[dict]:
 @router.get("/{paper_id}", response_model=Paper)
 def get_paper(paper_id: str) -> dict:
     paper = library().paper(paper_id)
+    if not paper:
+        raise HTTPException(status_code=404, detail="Paper not found.")
+    return paper
+
+@router.patch("/{paper_id}/display-title", response_model=Paper)
+def update_display_title(paper_id: str, payload: DisplayTitleUpdate) -> dict:
+    title = (payload.display_title or "").strip()
+    if len(title) > 240:
+        raise HTTPException(status_code=422, detail="Display title must be 240 characters or fewer.")
+    paper = library().set_display_title(paper_id, title or None)
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found.")
     return paper

@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from app.api.papers import library
 from app.api.qa import _safe, grounded
+from app.core.config import get_settings
 from app.services.research import ResearchService
 
 router = APIRouter(prefix="/research", tags=["cross-paper research"])
@@ -91,9 +92,9 @@ def _evidence(paper_ids: list[str]) -> dict[str, list[dict]]:
 @router.post("/compare")
 def compare(request: ResearchRequest) -> dict:
     evidence = _evidence(request.paper_ids)
-    return _safe(lambda: ResearchService(grounded()).compare(request.paper_ids, evidence))
+    return _safe(lambda: ResearchService(grounded(), get_settings().research_timeout_seconds).compare(request.paper_ids, evidence))
 
 @router.post("/gaps")
 def gaps(request: ResearchRequest) -> dict:
     evidence = _evidence(request.paper_ids)
-    return _safe(lambda: ResearchService(grounded()).gaps(evidence))
+    return _safe(lambda: ResearchService(grounded(), get_settings().research_timeout_seconds).gaps(evidence))

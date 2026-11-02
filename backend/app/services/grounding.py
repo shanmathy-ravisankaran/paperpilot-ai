@@ -57,11 +57,11 @@ class GroundedService:
         if not isinstance(value, dict): raise GroundingError("The model response must be a JSON object.")
         return value
 
-    def _structured(self, prompt: str, schema: type[BaseModel]) -> BaseModel:
+    def _structured(self, prompt: str, schema: type[BaseModel], json_schema: dict[str, Any] | None = None) -> BaseModel:
         """Ask twice at most; logs only format metadata, never evidence or model text."""
         for attempt in range(2):
             try:
-                raw = self.client.complete(prompt, schema.model_json_schema())
+                raw = self.client.complete(prompt, json_schema or schema.model_json_schema())
                 return schema.model_validate_json(raw)
             except (ValidationError, json.JSONDecodeError, GroundingError) as exc:
                 logger.warning("LLM structured output rejected: schema=%s attempt=%d error=%s", schema.__name__, attempt + 1, type(exc).__name__)

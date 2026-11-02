@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_model: str = "gpt-4o-mini"
     llm_timeout_seconds: int = 90
+    research_timeout_seconds: int = 300
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

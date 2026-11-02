@@ -4,7 +4,7 @@ export type HealthResponse = {
   version: string;
   timestamp: string;
 };
-export type Paper = { id: string; title: string; author: string | null; filename: string; page_count: number; chunk_count: number; indexed_at: string };
+export type Paper = { id: string; title: string; display_title?: string | null; author: string | null; filename: string; page_count: number; chunk_count: number; indexed_at: string };
 export type Passage = { text: string; score: number; paper_id: string; title: string; page: number; section: string; chunk_id: string };
 export type Citation = Passage & { citation_id: string };
 export type AskResponse = { answer: string; citations: string[]; sources: Citation[] };
@@ -13,7 +13,7 @@ export type Comparison = { papers: Array<{ paper_id: string; [key: string]: unkn
 export type Gaps = { gaps: Array<{ title: string; category: string; explanation: string; citations: string[]; why_it_might_matter: string; follow_up_question: string; author_stated: boolean; label: string }>; limitation: string; sources: Citation[] };
 
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8001";
 
 async function localFetch(input: RequestInfo | URL, init?: RequestInit, timeoutMs = 20_000): Promise<Response> {
   const controller = new AbortController();
@@ -54,6 +54,11 @@ export async function fetchPapers(): Promise<Paper[]> {
   if (!response.ok) return apiError(response);
   return response.json() as Promise<Paper[]>;
 }
+export async function updatePaperDisplayTitle(paperId: string, display_title: string | null): Promise<Paper> {
+  const response = await localFetch(`${API_BASE_URL}/papers/${paperId}/display-title`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ display_title }) });
+  if (!response.ok) return apiError(response);
+  return response.json() as Promise<Paper>;
+}
 export async function uploadPdf(file: File): Promise<Paper> {
   const form = new FormData(); form.append("file", file);
   const response = await localFetch(`${API_BASE_URL}/papers/upload`, { method: "POST", body: form }, 90_000);
@@ -77,7 +82,7 @@ export async function fetchSummary(paperId: string): Promise<SummaryResponse> {
   return response.json() as Promise<SummaryResponse>;
 }
 async function research<T>(path: string, paper_ids: string[]): Promise<T> {
-  const response = await localFetch(`${API_BASE_URL}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ paper_ids }) }, 150_000);
+  const response = await localFetch(`${API_BASE_URL}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ paper_ids }) }, 390_000);
   if (!response.ok) return apiError(response);
   return response.json() as Promise<T>;
 }
